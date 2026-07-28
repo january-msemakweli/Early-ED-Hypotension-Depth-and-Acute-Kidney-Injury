@@ -1,0 +1,37 @@
+# -------------------------------------------------------------------------
+# Patient-level derived data: NEVER commit. These are derived from MIMIC-IV
+# under a PhysioNet credentialed data use agreement and cannot be redistributed.
+# -------------------------------------------------------------------------
+tables/cache/
+tables/analytic_cohort.csv
+derived/
+
+# Raw MIMIC / PhysioNet tables, if ever placed inside the project tree
+physionet.org/
+*.csv.gz
+
+# -------------------------------------------------------------------------
+# Manuscript sources are kept out of this public repository, which is
+# intended only for the analysis code and its non-identifiable outputs.
+# -------------------------------------------------------------------------
+manuscript/
+latex_submission/
+STUDY_PLAN.md
+*.bib
+
+# -------------------------------------------------------------------------
+# Python / notebook
+# -------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+final_script.ipynb
+
+# -------------------------------------------------------------------------
+# Logs and OS / editor
+# -------------------------------------------------------------------------
+*.log
+.DS_Store
+Thumbs.db

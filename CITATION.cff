@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software or its derived results, please cite it."
+title: "Depth of Early ED Hypotension and Acute Kidney Injury: analysis code"
+type: software
+authors:
+  - family-names: Msemakweli
+    given-names: January G.
+    orcid: "https://orcid.org/0009-0007-6743-8479"
+    affiliation: "Johns Hopkins Bloomberg School of Public Health"
+  - family-names: Onesphore
+    given-names: Murishi
+    affiliation: "Johns Hopkins Bloomberg School of Public Health"
+  - family-names: Okpanachi
+    given-names: Victor
+    affiliation: "Mel and Enid Zuckerman College of Public Health, University of Arizona"
+  - family-names: Nyambod
+    given-names: Fabrice T.
+    affiliation: "Johns Hopkins Bloomberg School of Public Health"
+license: MIT
+version: 1.0.0
+date-released: 2026-07-28

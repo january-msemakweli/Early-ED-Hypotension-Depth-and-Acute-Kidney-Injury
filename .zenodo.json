@@ -1,0 +1,22 @@
+{
+  "title": "Depth of Early ED Hypotension and Acute Kidney Injury: analysis code",
+  "description": "Analysis code and non-identifiable aggregate outputs for a target-trial-style study of early emergency department hypotension depth and 7-day acute kidney injury or death in MIMIC-IV-ED linked to MIMIC-IV. Patient-level data are not included and cannot be redistributed under the PhysioNet data use agreement.",
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "creators": [
+    { "name": "Msemakweli, January G.", "orcid": "0009-0007-6743-8479", "affiliation": "Johns Hopkins Bloomberg School of Public Health" },
+    { "name": "Onesphore, Murishi", "affiliation": "Johns Hopkins Bloomberg School of Public Health" },
+    { "name": "Okpanachi, Victor", "affiliation": "Mel and Enid Zuckerman College of Public Health, University of Arizona" },
+    { "name": "Nyambod, Fabrice T.", "affiliation": "Johns Hopkins Bloomberg School of Public Health" }
+  ],
+  "keywords": [
+    "hypotension",
+    "acute kidney injury",
+    "emergency department",
+    "mean arterial pressure",
+    "propensity score",
+    "competing risks",
+    "MIMIC-IV"
+  ]
+}

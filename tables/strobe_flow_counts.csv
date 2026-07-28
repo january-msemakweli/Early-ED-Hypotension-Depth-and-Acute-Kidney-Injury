@@ -1,0 +1,6 @@
+step,n,excluded
+First ED hypotensive episode (adults),6731,
+Exclude ESRD / chronic dialysis,5962,769.0
+Exclude RRT at/before onset,5909,53.0
+Scorable 2-hour window,5909,0.0
+Reference creatinine available (AKI ascertainable),4688,1221.0
