@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,15 +12,11 @@ from matplotlib import font_manager
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Ellipse
 from matplotlib.lines import Line2D
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from config import FIGURES_DIR, TABLES_DIR, CACHE_DIR, HORIZON_DAYS  # noqa: E402
-
-FIG = FIGURES_DIR
-OUT = TABLES_DIR
-CACHE = CACHE_DIR
+HERE = Path(__file__).resolve().parent
+FIG = HERE / "figures"
+OUT = HERE / "tables"
+CACHE = OUT / "cache"
+HORIZON_DAYS = 7.0
 
 _avail = {f.name for f in font_manager.fontManager.ttflist}
 SERIF = "Times New Roman" if "Times New Roman" in _avail else "DejaVu Serif"
@@ -346,8 +341,9 @@ def figure_measure_bias(expo_df, primary, tip_df, ipcw, neg):
     gsB = fig.add_gridspec(1, 3, top=0.505, bottom=0.075, left=0.06, right=0.98,
                            wspace=0.32)
 
-    # ---------- Top: exposure-measurement comparison (spans all columns) ----------
+    # ---------- (A) Exposure-measurement comparison (spans all columns) ----------
     axT = fig.add_subplot(gsT[0, 0]); panel(axT, "x")
+    panel_label(axT, "(A)  Exposure-measurement comparison")
     ed = expo_df.iloc[::-1].reset_index(drop=True)
     y = np.arange(len(ed))
     cols = [PAL["deep"] if r["rd"] > 0 else PAL["muted"] for _, r in ed.iterrows()]
@@ -364,15 +360,12 @@ def figure_measure_bias(expo_df, primary, tip_df, ipcw, neg):
                  va="center", ha="left", fontsize=9.6, color=PAL["ink"], clip_on=False, zorder=8)
     axT.set_yticks(y); axT.set_yticklabels(ed["exposure"])
     axT.set_xlabel("Overlap-weighted 7-day risk difference, AKI or death (pts)")
-    axT.set_title("Planned exposure-measurement comparison:\n"
-                  "depth harms; charted minutes reverse (measurement artifact)",
-                  fontsize=13, pad=10)
     xmin = float(ed["rd_lo"].min() * 100) - 1.2
     axT.set_xlim(xmin, x_lab + 7.5)
     axT.set_ylim(-0.6, len(ed) - 0.4)
 
-    # ---------- (A) E-value ----------
-    ax = fig.add_subplot(gsB[0, 0]); panel(ax); panel_label(ax, "(A)  E-value")
+    # ---------- (B) E-value ----------
+    ax = fig.add_subplot(gsB[0, 0]); panel(ax); panel_label(ax, "(B)  E-value")
     rr, rr_lo = primary["rr"], primary["rr_lo"]
     gg = np.linspace(1.0, max(4.2, primary["e_value"] + 1.2), 220)
 
@@ -396,8 +389,19 @@ def figure_measure_bias(expo_df, primary, tip_df, ipcw, neg):
     ax.legend(fontsize=8.4, loc="upper right", frameon=True, facecolor="white",
               edgecolor="#D0D5DD")
 
-    # ---------- (C) Falsification and selection ----------
-    ax = fig.add_subplot(gsB[0, 1]); panel(ax, "x"); panel_label(ax, "(B)  Falsification and selection")
+    # ---------- (C) Unmeasured-confounding tipping point ----------
+    ax = fig.add_subplot(gsB[0, 1]); panel(ax); panel_label(ax, "(C)  Unmeasured-confounding tipping point")
+    for g, col in zip([1.5, 2.0, 2.5, 3.0], [PAL["amber"], PAL["sky"], PAL["plum"], PAL["deep"]]):
+        s = tip_df[tip_df.gamma == g]
+        ax.plot(s["delta"], s["rr_adj"], lw=2.2, color=col, label=f"RR {g:.1f}")
+    ax.axhline(1.0, color=PAL["ink"], ls="--", lw=1.3)
+    ax.set_xlabel("Confounder prevalence difference (deep - shallow)")
+    ax.set_ylabel("Bias-adjusted RR")
+    ax.legend(fontsize=8.2, loc="upper right", title="Confounder-outcome",
+              frameon=True, facecolor="white", edgecolor="#D0D5DD")
+
+    # ---------- (D) Negative control and selection ----------
+    ax = fig.add_subplot(gsB[0, 2]); panel(ax, "x"); panel_label(ax, "(D)  Negative control and selection")
     rows = [("Primary\n(composite)", primary["rd"], primary["rd_lo"], primary["rd_hi"], PAL["deep"]),
             ("Selection-adjusted\n(IPCW)", ipcw["rd"], ipcw["rd_lo"], ipcw["rd_hi"], PAL["sky"]),
             ("Negative control\n(pre-onset AKI)", neg["rd"], neg["rd_lo"], neg["rd_hi"], PAL["muted"])]
@@ -415,17 +419,6 @@ def figure_measure_bias(expo_df, primary, tip_df, ipcw, neg):
     ax.set_xlabel("Risk difference (pts)")
     ax.set_xlim(-2.5, x_lab + 4.2)
     ax.set_ylim(-0.7, len(rows) - 0.2)
-
-    # ---------- (D) Unmeasured-confounding tipping point ----------
-    ax = fig.add_subplot(gsB[0, 2]); panel(ax); panel_label(ax, "(C)  Unmeasured-confounding tipping point")
-    for g, col in zip([1.5, 2.0, 2.5, 3.0], [PAL["amber"], PAL["sky"], PAL["plum"], PAL["deep"]]):
-        s = tip_df[tip_df.gamma == g]
-        ax.plot(s["delta"], s["rr_adj"], lw=2.2, color=col, label=f"RR {g:.1f}")
-    ax.axhline(1.0, color=PAL["ink"], ls="--", lw=1.3)
-    ax.set_xlabel("Confounder prevalence difference (deep - shallow)")
-    ax.set_ylabel("Bias-adjusted RR")
-    ax.legend(fontsize=8.2, loc="upper right", title="Confounder-outcome",
-              frameon=True, facecolor="white", edgecolor="#D0D5DD")
 
     save_fig(fig, "Figure5_ExposureBias")
 
