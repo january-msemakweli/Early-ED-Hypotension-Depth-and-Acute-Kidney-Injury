@@ -86,6 +86,8 @@ def save_fig(fig, name):
             it.set_fontfamily(SERIF)
     fig.savefig(FIG / f"{name}.png")
     fig.savefig(FIG / f"{name}.pdf")
+    # AJEM/Elsevier submission requires EPS figure files.
+    fig.savefig(FIG / f"{name}.eps")
     try:
         from PIL import Image as PILImage
         PILImage.open(FIG / f"{name}.png").convert("RGB").save(
