@@ -37,6 +37,30 @@ PAL = {
 SPINE = "#B0B0B0"
 
 
+def blend(fg: str, bg: str, alpha: float) -> str:
+    """Opaque mix of fg over bg. EPS/PostScript has no alpha, so use this
+    instead of color=fg, alpha=... for fills that must look soft in both PDF and EPS."""
+    def rgb(h: str):
+        h = h.lstrip("#")
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+    f, b = rgb(fg), rgb(bg)
+    out = tuple(int(round(alpha * a + (1.0 - alpha) * c)) for a, c in zip(f, b))
+    return "#{:02X}{:02X}{:02X}".format(*out)
+
+
+# Soft band / wash colors (opaque stand-ins for former alpha fills).
+BAND_DEEP = blend(PAL["deep"], PAL["panel"], 0.18)
+BAND_SHALLOW = blend(PAL["shallow"], PAL["panel"], 0.18)
+WASH_DEEP = blend(PAL["deep"], PAL["panel"], 0.08)
+NODE_DEEP = blend(PAL["deep"], PAL["bg"], 0.30)
+NODE_SHALLOW = blend(PAL["shallow"], PAL["bg"], 0.30)
+NODE_AMBER = blend(PAL["amber"], PAL["bg"], 0.30)
+NODE_SKY = blend(PAL["sky"], PAL["bg"], 0.30)
+NODE_MUTED = blend(PAL["muted"], PAL["bg"], 0.30)
+HIST_DEEP = blend(PAL["deep"], PAL["panel"], 0.55)
+HIST_SHALLOW = blend(PAL["shallow"], PAL["panel"], 0.50)
+
+
 def apply_style():
     mpl.rcParams.update({
         "figure.dpi": 120, "savefig.dpi": 300, "figure.facecolor": PAL["bg"],
@@ -110,7 +134,11 @@ def figure_dag():
         "monitor": (6.0, 0.55, "Monitoring density /\nref-creatinine capture", PAL["muted"], "selection"),
     }
     for key, (x, y, lab, col, role) in nodes.items():
-        ax.add_patch(Ellipse((x, y), 2.9, 1.35, facecolor=col, alpha=0.30,
+        node_face = {
+            PAL["deep"]: NODE_DEEP, PAL["shallow"]: NODE_SHALLOW,
+            PAL["amber"]: NODE_AMBER, PAL["sky"]: NODE_SKY, PAL["muted"]: NODE_MUTED,
+        }.get(col, blend(col, PAL["bg"], 0.30))
+        ax.add_patch(Ellipse((x, y), 2.9, 1.35, facecolor=node_face,
                              edgecolor=col, linewidth=1.8, zorder=3))
         ax.text(x, y + 0.18, lab, ha="center", va="center", fontsize=10.0,
                 fontweight="bold", color=PAL["ink"], zorder=5)
@@ -194,8 +222,8 @@ def figure_flow(strobe):
     deep_tr = 78 - 34 * np.exp(-((tt - 25) ** 2) / 300)
     shal_tr = 74 - 12 * np.exp(-((tt - 40) ** 2) / 1400)
     y_nadir = float(deep_tr.min())
-    ax.axhspan(35, 65, color=PAL["deep"], alpha=0.05, zorder=0)
-    ax.fill_between(tt, deep_tr, 65, where=(deep_tr < 65), color=PAL["deep"], alpha=0.16, zorder=1)
+    ax.axhspan(35, 65, color=WASH_DEEP, zorder=0)
+    ax.fill_between(tt, deep_tr, 65, where=(deep_tr < 65), color=BAND_DEEP, zorder=1)
     ax.axhline(65, color=PAL["ink"], lw=1.1, ls="--", zorder=3)
     ann(ax, 118, 66.2, "MAP 65 mmHg threshold", ha="right", va="bottom", fontsize=8.6)
     ax.plot(tt, deep_tr, color=PAL["deep"], lw=2.8, zorder=5, label="Deep nadir (top tertile)")
@@ -284,7 +312,7 @@ def figure_primary_competing(primary, dose_df, cif_df, cause_specific):
     dd = dose_df.reset_index(drop=True); xd = np.arange(len(dd))
     ax.plot(xd, dd["risk"] * 100, "-o", color=PAL["deep"], lw=2.6, ms=10,
             markeredgecolor="white", zorder=4)
-    ax.fill_between(xd, dd["lo"] * 100, dd["hi"] * 100, color=PAL["deep"], alpha=0.15, zorder=2)
+    ax.fill_between(xd, dd["lo"] * 100, dd["hi"] * 100, color=BAND_DEEP, zorder=2)
     for x, (_, r) in zip(xd, dd.iterrows()):
         ann(ax, x, r["hi"] * 100 + 0.85, f"{r['risk']*100:.1f}%", ha="center",
             fontsize=10, fontweight="bold",
@@ -428,9 +456,9 @@ def figure_measure_bias(expo_df, primary, tip_df, ipcw, neg):
 def figure_supp(cc, sens_df, spline_df=None):
     fig, ax = plt.subplots(figsize=(8.0, 5.0)); panel(ax, "y")
     bins = np.linspace(0, 1, 31)
-    ax.hist(cc.loc[cc.deep == 1, "ps"], bins=bins, color=PAL["deep"], alpha=0.6,
+    ax.hist(cc.loc[cc.deep == 1, "ps"], bins=bins, color=HIST_DEEP,
             density=True, edgecolor="white", label="Deep nadir")
-    ax.hist(cc.loc[cc.deep == 0, "ps"], bins=bins, color=PAL["shallow"], alpha=0.55,
+    ax.hist(cc.loc[cc.deep == 0, "ps"], bins=bins, color=HIST_SHALLOW,
             density=True, edgecolor="white", label="Shallow nadir")
     ax.set_xlabel("Estimated propensity score (P[deep])"); ax.set_ylabel("Density")
     ax.legend(frameon=True, facecolor="white", edgecolor="#D0D5DD")
@@ -463,7 +491,7 @@ def figure_supp(cc, sens_df, spline_df=None):
         fig, ax = plt.subplots(figsize=(8.6, 5.4)); panel(ax)
         sp = spline_df.sort_values("nadir")
         ax.fill_between(sp["nadir"], sp["lo"] * 100, sp["hi"] * 100,
-                        color=PAL["deep"], alpha=0.16, zorder=2)
+                        color=BAND_DEEP, zorder=2)
         ax.plot(sp["nadir"], sp["risk"] * 100, color=PAL["deep"], lw=2.8, zorder=4)
         ax.axvline(65, color=PAL["ink"], ls="--", lw=1.1, zorder=3)
         ann(ax, 64.4, ax.get_ylim()[1], "MAP 65 threshold", ha="right", va="top", fontsize=8.6)
